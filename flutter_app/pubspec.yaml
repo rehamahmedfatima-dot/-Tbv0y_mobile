@@ -1,0 +1,80 @@
+name: tbvoy
+description: "TBVOY — The Best Version Of Yourself. Small Actions. Big Transformation."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+# NOTE ON VERSIONS: most packages below use "any" instead of a pinned
+# version. This lets pub's solver freely pick whatever version of each
+# package is mutually compatible with every other package (including
+# transitive requirements like flutter_localizations -> intl) — this is
+# what actually ends the "version solving failed" cycle we were chasing
+# one package at a time. Every package listed here is genuinely imported
+# somewhere in lib/ — nothing speculative or unused is included.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management & navigation
+  flutter_riverpod: any
+  go_router: any
+
+  # Firebase — push notifications only (auth is Supabase Auth)
+  firebase_core: any
+  firebase_messaging: any
+  # Pinned — newer major versions changed show() to use named parameters.
+  flutter_local_notifications: ^17.2.2
+
+  # Native OAuth flows used together with Supabase Auth
+  # Pinned (not "any") — v7+ of google_sign_in rewrote its API
+  # (GoogleSignIn.instance / authenticate() instead of GoogleSignIn() /
+  # signIn()), which our code doesn't use.
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: any
+
+  # Supabase — database + auth (Google/Apple/Email/Anonymous/OTP) + storage
+  supabase_flutter: any
+
+  # Gemini AI (Google AI Studio)
+  google_generative_ai: any
+  flutter_dotenv: any
+
+  # Networking (used by the FastAPI backend client)
+  dio: any
+
+  # Charts (Mood Tracker, Discipline Score trend)
+  fl_chart: any
+
+  # UI
+  google_fonts: any
+  table_calendar: any # Time Machine calendar
+
+  # Security
+  flutter_secure_storage: any
+  # Pinned — newer major versions changed the authenticate() API shape
+  # (AuthenticationOptions/options: param) that our code targets.
+  local_auth: ^2.3.0
+  crypto: any # Apple Sign-In nonce hashing
+
+  # Dates (journal, goals, mood, time machine)
+  intl: any
+
+  # Data export (Settings → Export)
+  share_plus: any
+  pdf: any
+  # Pinned — newer major versions renamed the converter classes.
+  csv: ^6.0.0
+
+  cupertino_icons: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: any
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
