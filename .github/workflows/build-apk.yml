@@ -1,0 +1,70 @@
+name: Build TBVOY APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'flutter_app/**'
+      - '.github/workflows/build-apk.yml'
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_DIR: flutter_app
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: ${{ env.FLUTTER_DIR }}
+        run: flutter pub get
+
+      - name: Create .env file
+        working-directory: ${{ env.FLUTTER_DIR }}
+        run: |
+          cat > .env <<'EOF'
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          BACKEND_API_URL=${{ secrets.BACKEND_API_URL }}
+          EOF
+
+      - name: Build release APK
+        working-directory: ${{ env.FLUTTER_DIR }}
+        run: flutter build apk --release
+
+      - name: Find APK
+        id: apk
+        run: |
+          APK_PATH=$(find flutter_app/build/app/outputs/flutter-apk -name "app-release.apk" | head -n 1)
+
+          if [ -z "$APK_PATH" ]; then
+            echo "APK was not found!"
+            exit 1
+          fi
+
+          echo "APK found: $APK_PATH"
+          echo "path=$APK_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TBVOY-Android-APK
+          path: ${{ steps.apk.outputs.path }}
+          if-no-files-found: error
+          retention-days: 14
