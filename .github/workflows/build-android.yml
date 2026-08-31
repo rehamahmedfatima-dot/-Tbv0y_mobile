@@ -1,0 +1,43 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+
+      # Same secrets as the web build — Settings → Secrets and variables →
+      # Actions in THIS repo (Tbv0y-mobile). They don't carry over from
+      # the original repo automatically, so add them here too.
+      - name: Create .env from repository secrets
+        run: |
+          cd flutter_app
+          cat > .env << EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          BACKEND_API_URL=${{ secrets.BACKEND_API_URL }}
+          EOF
+
+      - name: Install dependencies
+        run: cd flutter_app && flutter pub get
+
+      - name: Build APK (debug — no signing needed, installable for testing)
+        run: cd flutter_app && flutter build apk --debug
+
+      - name: Upload APK as a downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbvoy-debug-apk
+          path: flutter_app/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 30
